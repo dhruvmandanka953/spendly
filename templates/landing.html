@@ -23,7 +23,7 @@
     </p>
     <div class="hero-actions">
         <a href="{{ url_for('register') }}" class="hero-btn">Create free account</a>
-        <a href="#how-it-works" class="hero-btn">See how it works</a>
+        <a href="#" class="hero-btn" id="open-how-modal">See how it works</a>
     </div>
 
     <div class="hero-window">
@@ -99,5 +99,40 @@
         <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
     </div>
 </section>
+
+<div id="how-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+    <div id="how-modal-box" style="background:var(--paper-card); border-radius:12px; padding:1rem; max-width:720px; width:90%; position:relative;">
+        <button id="how-modal-close" style="position:absolute; top:0.5rem; right:0.75rem; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        <iframe id="how-modal-video" width="100%" height="400" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="How it works" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+</div>
+
+<script>
+(function() {
+    var modal = document.getElementById('how-modal');
+    var closeBtn = document.getElementById('how-modal-close');
+    var video = document.getElementById('how-modal-video');
+    var openLink = document.getElementById('open-how-modal');
+    var originalSrc = video.getAttribute('src');
+
+    function openModal() {
+        modal.style.display = 'flex';
+        video.setAttribute('src', originalSrc);
+    }
+    function closeModal() {
+        modal.style.display = 'none';
+        video.setAttribute('src', '');
+    }
+
+    openLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal();
+    });
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) closeModal();
+    });
+})();
+</script>
 
 {% endblock %}
