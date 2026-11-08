@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from datetime import datetime
 
+from flask import Flask, render_template, request, redirect, url_for, session
 from database.db import get_db, init_db, seed_db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -119,8 +120,72 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
 
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT id, name, email, created_at FROM users WHERE id = ?",
+            (session.get("user_id"),),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if row is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    name = row["name"]
+    initials = "".join(part[0] for part in name.split() if part)[:2].upper() or "U"
+
+    created_at = row["created_at"]
+    try:
+        member_since = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S").strftime("%B %Y")
+    except (TypeError, ValueError):
+        member_since = created_at or ""
+
+    profile_user = {
+        "name": name,
+        "email": row["email"],
+        "initials": initials,
+        "member_since": member_since,
+    }
+
+    stats = {
+        "total_spent": 2875.00,
+        "transaction_count": 8,
+        "top_category": "Bills",
+    }
+
+    transactions = [
+        {"date": "2025-01-01", "description": "Lunch at cafe", "category": "Food", "amount": 45.00},
+        {"date": "2025-01-03", "description": "Cab to office", "category": "Transport", "amount": 120.00},
+        {"date": "2025-01-05", "description": "Electricity bill", "category": "Bills", "amount": 890.00},
+        {"date": "2025-01-07", "description": "Pharmacy", "category": "Health", "amount": 320.00},
+        {"date": "2025-01-10", "description": "Movie tickets", "category": "Entertainment", "amount": 250.00},
+        {"date": "2025-01-12", "description": "Clothes", "category": "Shopping", "amount": 650.00},
+        {"date": "2025-01-15", "description": "Misc expense", "category": "Other", "amount": 100.00},
+        {"date": "2025-01-18", "description": "Groceries", "category": "Food", "amount": 500.00},
+    ]
+
+    categories = [
+        {"name": "Bills", "amount": 890.00, "percent": 31},
+        {"name": "Shopping", "amount": 650.00, "percent": 23},
+        {"name": "Food", "amount": 545.00, "percent": 19},
+        {"name": "Health", "amount": 320.00, "percent": 11},
+        {"name": "Entertainment", "amount": 250.00, "percent": 9},
+        {"name": "Transport", "amount": 120.00, "percent": 4},
+        {"name": "Other", "amount": 100.00, "percent": 3},
+    ]
+
+    return render_template(
+        "profile.html",
+        user=profile_user,
+        stats=stats,
+        transactions=transactions,
+        categories=categories,
+    )
 
 @app.route("/expenses/add")
 def add_expense():
